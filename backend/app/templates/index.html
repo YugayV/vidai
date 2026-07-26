@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContentForge</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">◆</span>
+      <span class="brand-name">ContentForge</span>
+    </div>
+    <div id="user-badge" class="user-badge hidden">
+      <span id="user-email"></span>
+      <span id="sub-pill" class="pill"></span>
+      <button id="logout-btn" class="ghost-btn">Выйти</button>
+    </div>
+  </header>
+
+  <main id="auth-screen" class="screen">
+    <div class="auth-card">
+      <h1>Личная фабрика роликов</h1>
+      <p class="sub">Вход только по инвайту — доступ для тебя и твоего круга.</p>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="login">Вход</button>
+        <button class="tab-btn" data-tab="register">Регистрация</button>
+      </div>
+
+      <form id="login-form" class="tab-panel active">
+        <input type="email" id="login-email" placeholder="Email" required />
+        <input type="password" id="login-password" placeholder="Пароль" required />
+        <button type="submit" class="primary-btn">Войти</button>
+        <p class="error" id="login-error"></p>
+      </form>
+
+      <form id="register-form" class="tab-panel">
+        <input type="email" id="reg-email" placeholder="Email" required />
+        <input type="password" id="reg-password" placeholder="Пароль" required />
+        <input type="text" id="reg-invite" placeholder="Инвайт-код" required />
+        <button type="submit" class="primary-btn">Создать аккаунт</button>
+        <p class="error" id="reg-error"></p>
+      </form>
+    </div>
+  </main>
+
+  <main id="dashboard-screen" class="screen hidden">
+
+    <section id="paywall" class="paywall hidden">
+      <h2>Нужна подписка</h2>
+      <p>Генерация роликов доступна по подписке. Оформи прямо тут — оплата картой через Stripe.</p>
+      <button id="subscribe-btn" class="primary-btn">Оформить подписку</button>
+    </section>
+
+    <section class="create-card">
+      <h2>Новый ролик</h2>
+      <input type="text" id="job-topic" placeholder="Тема / бриф ролика" />
+      <input type="text" id="job-url" placeholder="Ссылка на референс (необязательно)" />
+      <button id="create-job-btn" class="primary-btn">Сгенерировать</button>
+    </section>
+
+    <section class="jobs-list">
+      <h2>Мои ролики</h2>
+      <div id="jobs-container"></div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

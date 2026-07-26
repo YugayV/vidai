@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0B0C0E;
+  --panel: #16181C;
+  --panel-border: #262A31;
+  --text: #F2F0EA;
+  --text-dim: #8A8F98;
+  --ember: #FF6A3D;
+  --ember-dim: #7A3520;
+  --gold: #C9A227;
+  --danger: #E5484D;
+  --success: #4FC38A;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+.hidden { display: none !important; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.brand { display: flex; align-items: center; gap: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
+.brand-mark { color: var(--ember); }
+
+.user-badge { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text-dim); }
+.pill { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--panel-border); text-transform: uppercase; letter-spacing: 0.04em; }
+.pill.active { color: var(--success); border-color: var(--success); }
+.pill.inactive { color: var(--text-dim); }
+
+.ghost-btn {
+  background: none;
+  border: 1px solid var(--panel-border);
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+}
+.ghost-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+.screen { max-width: 720px; margin: 0 auto; padding: 48px 24px; }
+
+.auth-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: var(--radius); padding: 40px; }
+.auth-card h1 { font-family: 'Space Grotesk', sans-serif; font-size: 26px; margin: 0 0 8px; }
+.sub { color: var(--text-dim); font-size: 14px; margin: 0 0 28px; }
+
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--bg); border-radius: var(--radius); padding: 4px; }
+.tab-btn { flex: 1; padding: 8px; background: none; border: none; color: var(--text-dim); cursor: pointer; border-radius: 6px; font-size: 14px; }
+.tab-btn.active { background: var(--panel-border); color: var(--text); }
+
+.tab-panel { display: none; flex-direction: column; gap: 12px; }
+.tab-panel.active { display: flex; }
+
+input[type="text"], input[type="email"], input[type="password"] {
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  width: 100%;
+}
+input:focus { outline: none; border-color: var(--ember); }
+
+.primary-btn {
+  background: var(--ember);
+  color: #0B0C0E;
+  border: none;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+.primary-btn:hover { background: #ff7f57; }
+.primary-btn:disabled { background: var(--ember-dim); cursor: not-allowed; }
+
+.error { color: var(--danger); font-size: 13px; min-height: 16px; }
+
+.paywall, .create-card, .jobs-list {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+}
+.paywall { border-color: var(--gold); }
+.paywall h2 { color: var(--gold); margin-top: 0; }
+
+.create-card h2, .jobs-list h2 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; margin-top: 0; }
+.create-card input { margin-bottom: 12px; }
+
+.job-card {
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.job-topic { font-weight: 600; margin-bottom: 4px; }
+.job-meta { color: var(--text-dim); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+
+.status-track { height: 4px; background: var(--panel-border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.status-fill { height: 100%; background: var(--ember); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+.job-download { display: inline-block; margin-top: 10px; color: var(--success); font-size: 13px; text-decoration: none; }
+.job-error { color: var(--danger); font-size: 12px; margin-top: 8px; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; }
