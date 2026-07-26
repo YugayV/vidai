@@ -24,6 +24,35 @@ class MeOut(BaseModel):
     email: EmailStr
     subscription_status: str
     has_active_subscription: bool
+    is_admin: bool
+
+    class Config:
+        from_attributes = True
+
+
+class GoogleAuthIn(BaseModel):
+    id_token: str
+    invite_code: str
+
+
+class TelegramAuthIn(BaseModel):
+    id: int
+    first_name: str
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    photo_url: Optional[str] = None
+    auth_date: int
+    hash: str
+    invite_code: str
+
+
+class AdminUserOut(BaseModel):
+    id: str
+    email: EmailStr
+    is_admin: bool
+    auth_provider: str
+    subscription_status: str
+    created_at: dt.datetime
 
     class Config:
         from_attributes = True

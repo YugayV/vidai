@@ -51,6 +51,66 @@ $("register-form").addEventListener("submit", async (e) => {
   boot();
 });
 
+// ---------- Google ----------
+async function handleGoogleCredential(response) {
+  $("oauth-error").textContent = "";
+  const invite = $("oauth-invite").value.trim();
+  const res = await fetch("/auth/google", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id_token: response.credential, invite_code: invite }),
+  });
+  const data = await res.json();
+  if (!res.ok) return ($("oauth-error").textContent = data.detail || "Ошибка входа через Google");
+  state.token = data.access_token;
+  localStorage.setItem("token", state.token);
+  boot();
+}
+
+// ---------- Telegram ----------
+window.onTelegramAuth = async function (tgUser) {
+  $("oauth-error").textContent = "";
+  const invite = $("oauth-invite").value.trim();
+  const res = await fetch("/auth/telegram", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...tgUser, invite_code: invite }),
+  });
+  const data = await res.json();
+  if (!res.ok) return ($("oauth-error").textContent = data.detail || "Ошибка входа через Telegram");
+  state.token = data.access_token;
+  localStorage.setItem("token", state.token);
+  boot();
+};
+
+async function initOAuthButtons() {
+  const res = await fetch("/config");
+  const cfg = await res.json();
+
+  if (cfg.google_client_id && window.google?.accounts?.id) {
+    google.accounts.id.initialize({
+      client_id: cfg.google_client_id,
+      callback: handleGoogleCredential,
+    });
+    google.accounts.id.renderButton($("google-btn-container"), {
+      theme: "outline",
+      size: "large",
+      width: 280,
+    });
+  }
+
+  if (cfg.telegram_bot_username) {
+    const script = document.createElement("script");
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.setAttribute("data-telegram-login", cfg.telegram_bot_username);
+    script.setAttribute("data-size", "large");
+    script.setAttribute("data-onauth", "onTelegramAuth(user)");
+    script.setAttribute("data-request-access", "write");
+    script.async = true;
+    $("telegram-btn-container").appendChild(script);
+  }
+}
+
 $("logout-btn").addEventListener("click", () => {
   localStorage.removeItem("token");
   state.token = null;
@@ -117,6 +177,51 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ---------- Admin ----------
+async function loadAdminPanel() {
+  const res = await fetch("/admin/users", { headers: authHeaders() });
+  if (!res.ok) return;
+  const users = await res.json();
+  const container = $("admin-users-container");
+  container.innerHTML = "";
+
+  for (const u of users) {
+    const row = document.createElement("div");
+    row.className = "admin-row";
+    const statusLabel = u.is_admin ? "админ" : u.subscription_status;
+    row.innerHTML = `
+      <div>
+        <div class="admin-row-email">${escapeHtml(u.email)}</div>
+        <div class="job-meta">${escapeHtml(u.auth_provider)} · ${escapeHtml(statusLabel)}</div>
+      </div>
+      <div class="admin-row-actions"></div>
+    `;
+    const actions = row.querySelector(".admin-row-actions");
+
+    if (!u.is_admin) {
+      const grantBtn = document.createElement("button");
+      grantBtn.className = "ghost-btn";
+      grantBtn.textContent = "Выдать доступ";
+      grantBtn.onclick = async () => {
+        await fetch(`/admin/users/${u.id}/grant`, { method: "POST", headers: authHeaders() });
+        loadAdminPanel();
+      };
+
+      const revokeBtn = document.createElement("button");
+      revokeBtn.className = "ghost-btn";
+      revokeBtn.textContent = "Забрать доступ";
+      revokeBtn.onclick = async () => {
+        await fetch(`/admin/users/${u.id}/revoke`, { method: "POST", headers: authHeaders() });
+        loadAdminPanel();
+      };
+
+      actions.append(grantBtn, revokeBtn);
+    }
+
+    container.appendChild(row);
+  }
+}
+
 // ---------- Boot ----------
 async function boot() {
   if (!state.token) {
@@ -146,9 +251,13 @@ async function boot() {
   $("paywall").classList.toggle("hidden", state.me.has_active_subscription);
   $("create-job-btn").disabled = !state.me.has_active_subscription;
 
+  $("admin-panel").classList.toggle("hidden", !state.me.is_admin);
+  if (state.me.is_admin) loadAdminPanel();
+
   loadJobs();
   clearInterval(state.pollTimer);
   state.pollTimer = setInterval(loadJobs, 4000);
 }
 
+initOAuthButtons();
 boot();

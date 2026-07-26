@@ -14,7 +14,8 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=gen_id)
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)  # пусто у Google/Telegram-пользователей
+    auth_provider = Column(String, default="email")   # email | google | telegram
     is_admin = Column(Boolean, default=False)
 
     # Stripe

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ContentForge</title>
   <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -44,6 +45,15 @@
         <button type="submit" class="primary-btn">Создать аккаунт</button>
         <p class="error" id="reg-error"></p>
       </form>
+
+      <div class="oauth-divider"><span>или</span></div>
+
+      <div class="oauth-block">
+        <input type="text" id="oauth-invite" placeholder="Инвайт-код (для первого входа через Google/Telegram)" />
+        <div id="google-btn-container"></div>
+        <div id="telegram-btn-container"></div>
+        <p class="error" id="oauth-error"></p>
+      </div>
     </div>
   </main>
 
@@ -65,6 +75,11 @@
     <section class="jobs-list">
       <h2>Мои ролики</h2>
       <div id="jobs-container"></div>
+    </section>
+
+    <section id="admin-panel" class="admin-panel hidden">
+      <h2>Админка</h2>
+      <div id="admin-users-container"></div>
     </section>
 
   </main>

@@ -18,6 +18,17 @@ class Settings(BaseSettings):
     # --- Приглашение для регистрации знакомых (простая защита от чужих) ---
     INVITE_CODE: str = "change-me-invite"
 
+    # --- Google OAuth (кнопка "Войти через Google") ---
+    # Google Cloud Console -> APIs & Services -> Credentials -> OAuth client ID
+    # -> Web application -> Authorized JavaScript origins = твой домен
+    GOOGLE_OAUTH_CLIENT_ID: str = ""
+
+    # --- Telegram Login Widget ---
+    # Бот создаётся у @BotFather; затем команда /setdomain -> указать домен
+    # сайта (виджет не будет работать без привязанного домена).
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_BOT_USERNAME: str = ""
+
     # --- LLM для сценария ---
     ANTHROPIC_API_KEY: str = ""
 
