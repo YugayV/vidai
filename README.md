@@ -48,11 +48,10 @@ docker compose up -d --build
 
 1. Залей проект в GitHub-репозиторий (можно приватный).
 2. На railway.app → **New Project → Deploy from GitHub repo** → выбери репозиторий.
-3. В настройках сервиса (**Settings**) укажи:
-   - **Root Directory**: `backend` — это важно, т.к. `Dockerfile` и
-     `requirements.txt` лежат внутри `backend/`, и Railway должен собирать
-     образ именно из этой папки, а не из корня репо.
-   - Railway сам найдёт `Dockerfile` и соберёт образ (ffmpeg внутри уже есть).
+3. Ничего в **Root Directory** указывать не нужно — `Dockerfile` лежит в
+   корне репо, и Railway всегда приоритетно берёт именно его, даже если
+   до этого пытался собрать проект через Railpack (их zero-config билдер).
+   В логах сборки должно быть `Using Detected Dockerfile`, а не `Railpack`.
 4. **Variables** → добавь все переменные из `.env.example` (ключи API,
    `SECRET_KEY`, `INVITE_CODE`, Stripe-ключи). `.env`-файл в репозиторий не
    заливай — он в `.gitignore`.
@@ -72,6 +71,15 @@ docker compose up -d --build
 
 Порт Railway назначает сам через `$PORT` — `Dockerfile` уже под это
 подстроен, ничего дополнительно настраивать не нужно.
+
+**Если всё равно видишь ошибку `railpack process exited with an error`:**
+Значит Railway не нашёл `Dockerfile` в корне (например, если ты закинул в
+репозиторий только содержимое `backend/`, а не весь проект целиком —
+`Dockerfile`, `docker-compose.yml`, `.env.example` должны быть в корне
+репо рядом с папкой `backend/`). Проверь в GitHub, что структура репо
+именно такая, как в архиве. Также помогает **Settings → зачистить билд-кэш
+(Clear build cache / Redeploy)** — Railway иногда кэширует прошлое решение
+использовать Railpack.
 
 ## 5. Чтобы отдать доступ знакомым и принимать оплату (запуск на своей машине)
 
