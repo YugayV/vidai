@@ -134,7 +134,11 @@ $("create-job-btn").addEventListener("click", async () => {
   const res = await fetch("/jobs", {
     method: "POST",
     headers: { ...authHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, source_url: $("job-url").value.trim() || null }),
+    body: JSON.stringify({
+      topic,
+      source_url: $("job-url").value.trim() || null,
+      aspect_ratio: $("job-aspect").value,
+    }),
   });
   if (res.ok) {
     $("job-topic").value = "";
@@ -142,6 +146,27 @@ $("create-job-btn").addEventListener("click", async () => {
     loadJobs();
   }
 });
+
+const STEP_ORDER = [
+  { key: "queued", label: "Очередь" },
+  { key: "script", label: "Сценарий" },
+  { key: "images", label: "Кадры" },
+  { key: "video", label: "Видео" },
+  { key: "voice", label: "Озвучка" },
+  { key: "assembling", label: "Сборка" },
+  { key: "done", label: "Готово" },
+];
+
+function renderStepper(status) {
+  const baseStatus = status.split(":")[0]; // "images:2/5" -> "images"
+  const currentIdx = STEP_ORDER.findIndex((s) => s.key === baseStatus);
+  return `<div class="stepper">${STEP_ORDER.map((s, i) => {
+    let cls = "step";
+    if (i < currentIdx) cls += " done";
+    else if (i === currentIdx) cls += " active";
+    return `<div class="${cls}"><div class="step-dot"></div><div class="step-label">${s.label}</div></div>`;
+  }).join("")}</div>`;
+}
 
 async function loadJobs() {
   const res = await fetch("/jobs", { headers: authHeaders() });
@@ -165,12 +190,20 @@ async function loadJobs() {
 
     card.innerHTML = `
       <div class="job-topic">${escapeHtml(job.topic)}</div>
-      <div class="job-meta">статус: ${job.status}</div>
-      ${isRunning ? `<div class="status-track"><div class="status-fill"></div></div>` : ""}
+      <div class="job-meta">${job.aspect_ratio || "9:16"} · статус: ${job.status}</div>
+      ${isRunning ? renderStepper(job.status) : ""}
       ${job.status === "done" ? `
+        ${publicUrl ? `<video class="job-preview" src="${publicUrl}" controls preload="metadata"></video>` : ""}
         <div class="job-actions">
           <a class="job-download" href="/jobs/${job.id}/download">Скачать видео →</a>
           <button class="ghost-btn copy-link-btn" data-url="${publicUrl}">Скопировать ссылку</button>
+          <button class="ghost-btn toggle-clip-btn">Нарезать клип</button>
+        </div>
+        <div class="clip-row hidden">
+          <input type="number" class="clip-start" placeholder="от, сек" min="0" step="0.5" />
+          <input type="number" class="clip-end" placeholder="до, сек" min="0" step="0.5" />
+          <button class="ghost-btn do-clip-btn" data-job-id="${job.id}">Скачать клип</button>
+          <span class="clip-status"></span>
         </div>
       ` : ""}
       ${job.error ? `<div class="job-error">${escapeHtml(job.error.slice(0, 400))}</div>` : ""}
@@ -184,6 +217,53 @@ async function loadJobs() {
       const original = btn.textContent;
       btn.textContent = "Скопировано ✓";
       setTimeout(() => (btn.textContent = original), 1500);
+    });
+  });
+
+  container.querySelectorAll(".toggle-clip-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btn.closest(".job-card").querySelector(".clip-row").classList.toggle("hidden");
+    });
+  });
+
+  container.querySelectorAll(".do-clip-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = btn.closest(".job-card");
+      const start = parseFloat(card.querySelector(".clip-start").value);
+      const end = parseFloat(card.querySelector(".clip-end").value);
+      const statusEl = card.querySelector(".clip-status");
+
+      if (isNaN(start) || isNaN(end) || end <= start) {
+        statusEl.textContent = "Укажи корректный диапазон";
+        return;
+      }
+
+      statusEl.textContent = "Режу...";
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/jobs/${btn.dataset.jobId}/clip`, {
+          method: "POST",
+          headers: { ...authHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ start_sec: start, end_sec: end }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          statusEl.textContent = err.detail || "Ошибка нарезки";
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `clip_${btn.dataset.jobId}.mp4`;
+        a.click();
+        URL.revokeObjectURL(url);
+        statusEl.textContent = "Готово ✓";
+      } catch {
+        statusEl.textContent = "Ошибка сети";
+      } finally {
+        btn.disabled = false;
+      }
     });
   });
 }
@@ -287,6 +367,71 @@ async function loadAdminPanel() {
     container.appendChild(row);
   }
 }
+
+// ---------- AI-ассистент ----------
+let assistantHistory = [];
+
+function renderAssistantLog() {
+  const log = $("assistant-log");
+  log.innerHTML = assistantHistory.map((m) => `
+    <div class="chat-msg chat-${m.role}">
+      <div class="chat-bubble">${escapeHtml(m.content)}</div>
+      ${m.role === "assistant" ? `<button class="ghost-btn use-topic-btn" data-text="${escapeHtml(extractTopic(m.content))}">Вставить в тему</button>` : ""}
+    </div>
+  `).join("");
+  log.scrollTop = log.scrollHeight;
+
+  log.querySelectorAll(".use-topic-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      $("job-topic").value = btn.dataset.text;
+      $("job-topic").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
+}
+
+function extractTopic(text) {
+  const match = text.match(/ТЕМА:\s*(.+)/i);
+  return match ? match[1].trim() : text.trim();
+}
+
+async function sendAssistantMessage() {
+  const input = $("assistant-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  assistantHistory.push({ role: "user", content: text });
+  renderAssistantLog();
+  input.value = "";
+
+  const sendBtn = $("assistant-send-btn");
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Думаю...";
+
+  try {
+    const res = await fetch("/assistant/chat", {
+      method: "POST",
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: assistantHistory }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      assistantHistory.push({ role: "assistant", content: data.detail || "Ошибка ассистента" });
+    } else {
+      assistantHistory.push({ role: "assistant", content: data.reply });
+    }
+  } catch {
+    assistantHistory.push({ role: "assistant", content: "Не получилось связаться с сервером" });
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = "Спросить";
+    renderAssistantLog();
+  }
+}
+
+$("assistant-send-btn").addEventListener("click", sendAssistantMessage);
+$("assistant-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendAssistantMessage();
+});
 
 // ---------- Boot ----------
 async function boot() {

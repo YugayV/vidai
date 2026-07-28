@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from .database import Base, engine, run_light_migrations
-from .routers import auth, billing, jobs, admin, config_public, analytics
+from .routers import auth, billing, jobs, admin, config_public, analytics, assistant
 from .config import settings
 
 Base.metadata.create_all(bind=engine)
@@ -17,6 +17,7 @@ app.include_router(jobs.router)
 app.include_router(admin.router)
 app.include_router(config_public.router)
 app.include_router(analytics.router)
+app.include_router(assistant.router)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 

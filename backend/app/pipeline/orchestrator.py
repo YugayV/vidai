@@ -42,7 +42,7 @@ def run_pipeline(job_id: str, db: Session):
             # 2. Кадр
             _set_status(db, job, f"images:{i+1}/{len(scenes)}")
             img_path = os.path.join(job_dir, f"scene_{i}.png")
-            image_gen.generate_image(scene["image_prompt"], img_path)
+            image_gen.generate_image(scene["image_prompt"], img_path, aspect_ratio=job.aspect_ratio)
 
             # 3. Видео из кадра
             _set_status(db, job, f"video:{i+1}/{len(scenes)}")
@@ -50,6 +50,7 @@ def run_pipeline(job_id: str, db: Session):
             video_gen.generate_video_from_image(
                 img_path, scene["image_prompt"], vid_path,
                 duration_sec=scene.get("duration_sec", 5),
+                aspect_ratio=job.aspect_ratio,
             )
 
             # 4. Озвучка

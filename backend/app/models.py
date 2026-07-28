@@ -44,6 +44,7 @@ class Job(Base):
     # вход
     source_url = Column(String, nullable=True)   # ссылка на референс-ролик (опционально)
     topic = Column(Text, nullable=False)          # тема/ниша/бриф
+    aspect_ratio = Column(String, default="9:16")  # 9:16 (Reels) | 1:1 | 16:9
 
     # статус пайплайна: queued -> script -> images -> voice -> video -> assembling -> done | error
     status = Column(String, default="queued")

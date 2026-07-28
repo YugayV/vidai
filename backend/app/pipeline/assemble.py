@@ -14,6 +14,8 @@ def mux_scene(video_path: str, voice_path: str, out_path: str) -> str:
         "ffmpeg", "-y",
         "-i", video_path,
         "-i", voice_path,
+        "-map", "0:v:0",
+        "-map", "1:a:0",
         "-c:v", "copy",
         "-c:a", "aac",
         "-shortest",

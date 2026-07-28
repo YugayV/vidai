@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+import os
+import subprocess
 
 from .. import models, schemas, security
 from ..database import get_db, SessionLocal
@@ -25,7 +27,12 @@ def create_job(
     user: models.User = Depends(security.require_subscription),
     db: Session = Depends(get_db),
 ):
-    job = models.Job(user_id=user.id, topic=data.topic, source_url=data.source_url)
+    job = models.Job(
+        user_id=user.id,
+        topic=data.topic,
+        source_url=data.source_url,
+        aspect_ratio=data.aspect_ratio,
+    )
     db.add(job)
     db.commit()
     db.refresh(job)
@@ -81,3 +88,36 @@ def public_download(job_id: str, token: str, db: Session = Depends(get_db)):
     if not job or not job.share_token or job.share_token != token or not job.final_video_path:
         raise HTTPException(404, "Ссылка недействительна или видео ещё не готово")
     return FileResponse(job.final_video_path, media_type="video/mp4", filename=f"{job.id}.mp4")
+
+
+@router.post("/{job_id}/clip")
+def clip_job(
+    job_id: str,
+    data: schemas.ClipIn,
+    user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Вырезает кусок готового ролика по таймкодам (в секундах) — для нарезки на несколько клипов."""
+    job = db.query(models.Job).filter(models.Job.id == job_id, models.Job.user_id == user.id).first()
+    if not job or not job.final_video_path:
+        raise HTTPException(404, "Видео ещё не готово")
+    if data.end_sec <= data.start_sec:
+        raise HTTPException(400, "Конец отрезка должен быть позже начала")
+
+    out_path = os.path.join(
+        os.path.dirname(job.final_video_path),
+        f"clip_{int(data.start_sec)}_{int(data.end_sec)}.mp4",
+    )
+    cmd = [
+        "ffmpeg", "-y",
+        "-ss", str(data.start_sec),
+        "-to", str(data.end_sec),
+        "-i", job.final_video_path,
+        "-c:v", "libx264", "-c:a", "aac",  # реэнкод — чтобы обрезка была точной, не по ключевым кадрам
+        out_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0 or not os.path.exists(out_path):
+        raise HTTPException(500, f"Не получилось обрезать видео: {result.stderr[-500:]}")
+
+    return FileResponse(out_path, media_type="video/mp4", filename=f"clip_{job.id}.mp4")

@@ -36,6 +36,8 @@ class Settings(BaseSettings):
 
     # --- Google Gemini (Nano Banana = картинки, Veo = видео) ---
     GOOGLE_API_KEY: str = ""
+    # Nano Banana: "gemini-2.5-flash-image" (стабильная) или
+    # "gemini-3.1-flash-image-preview" (новее, если доступна на аккаунте)
     IMAGE_MODEL: str = "gemini-2.5-flash-image"
     VIDEO_MODEL: str = "veo-3.1-generate-preview"
 

@@ -65,11 +65,25 @@
       <button id="subscribe-btn" class="primary-btn">Оформить подписку</button>
     </section>
 
+    <section class="assistant-panel">
+      <h2>Ассистент по темам <span class="badge">Claude</span></h2>
+      <div id="assistant-log" class="assistant-log"></div>
+      <div class="assistant-input-row">
+        <input type="text" id="assistant-input" placeholder="Например: придумай тему про генерацию видео из фото товара" />
+        <button id="assistant-send-btn" class="ghost-btn">Спросить</button>
+      </div>
+    </section>
+
     <section class="create-card">
       <h2>Новый ролик</h2>
       <input type="text" id="job-topic" placeholder="Тема / бриф ролика" />
       <input type="text" id="job-url" placeholder="Ссылка на референс (необязательно)" />
-      <button id="create-job-btn" class="primary-btn">Сгенерировать</button>
+      <select id="job-aspect">
+        <option value="9:16" selected>9:16 — Reels / Shorts</option>
+        <option value="1:1">1:1 — квадрат</option>
+        <option value="16:9">16:9 — широкий</option>
+      </select>
+      <button id="create-job-btn" class="primary-btn" style="margin-top:12px;">Сгенерировать</button>
     </section>
 
     <section class="analytics-panel">

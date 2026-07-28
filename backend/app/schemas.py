@@ -61,12 +61,19 @@ class AdminUserOut(BaseModel):
 class JobCreateIn(BaseModel):
     topic: str
     source_url: Optional[str] = None
+    aspect_ratio: str = "9:16"
+
+
+class ClipIn(BaseModel):
+    start_sec: float
+    end_sec: float
 
 
 class JobOut(BaseModel):
     id: str
     topic: str
     source_url: Optional[str]
+    aspect_ratio: str
     status: str
     error: Optional[str]
     final_video_path: Optional[str]

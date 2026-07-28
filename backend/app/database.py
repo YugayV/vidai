@@ -36,6 +36,7 @@ def run_light_migrations():
         "share_token": "VARCHAR",
         "started_at": "DATETIME",
         "finished_at": "DATETIME",
+        "aspect_ratio": "VARCHAR DEFAULT '9:16'",
     }
     with engine.begin() as conn:
         for name, ddl_type in to_add.items():
