@@ -1,16 +1,16 @@
 import datetime as dt
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class RegisterIn(BaseModel):
-    email: EmailStr
+    email: str
     password: str
-    invite_code: str
+    invite_code: str = ""
 
 
 class LoginIn(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 
@@ -21,7 +21,7 @@ class TokenOut(BaseModel):
 
 class MeOut(BaseModel):
     id: str
-    email: EmailStr
+    email: str
     subscription_status: str
     has_active_subscription: bool
     is_admin: bool
@@ -32,7 +32,7 @@ class MeOut(BaseModel):
 
 class GoogleAuthIn(BaseModel):
     id_token: str
-    invite_code: str
+    invite_code: str = ""
 
 
 class TelegramAuthIn(BaseModel):
@@ -43,12 +43,12 @@ class TelegramAuthIn(BaseModel):
     photo_url: Optional[str] = None
     auth_date: int
     hash: str
-    invite_code: str
+    invite_code: str = ""
 
 
 class AdminUserOut(BaseModel):
     id: str
-    email: EmailStr
+    email: str
     is_admin: bool
     auth_provider: str
     subscription_status: str
@@ -70,6 +70,7 @@ class JobOut(BaseModel):
     status: str
     error: Optional[str]
     final_video_path: Optional[str]
+    share_token: Optional[str]
     created_at: dt.datetime
     updated_at: dt.datetime
 

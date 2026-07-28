@@ -69,3 +69,15 @@ def download_job(
     if not job or not job.final_video_path:
         raise HTTPException(404, "Видео ещё не готово")
     return FileResponse(job.final_video_path, media_type="video/mp4", filename=f"{job.id}.mp4")
+
+
+@router.get("/{job_id}/public/{token}")
+def public_download(job_id: str, token: str, db: Session = Depends(get_db)):
+    """
+    Публичная ссылка на скачивание без авторизации — по ней можно поделиться
+    готовым роликом (например, в Telegram) не требуя логина на сайте.
+    """
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job or not job.share_token or job.share_token != token or not job.final_video_path:
+        raise HTTPException(404, "Ссылка недействительна или видео ещё не готово")
+    return FileResponse(job.final_video_path, media_type="video/mp4", filename=f"{job.id}.mp4")

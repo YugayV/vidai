@@ -159,16 +159,82 @@ async function loadJobs() {
     const card = document.createElement("div");
     card.className = "job-card";
     const isRunning = !["done", "error"].includes(job.status);
+    const publicUrl = job.share_token
+      ? `${window.location.origin}/jobs/${job.id}/public/${job.share_token}`
+      : null;
 
     card.innerHTML = `
       <div class="job-topic">${escapeHtml(job.topic)}</div>
       <div class="job-meta">статус: ${job.status}</div>
       ${isRunning ? `<div class="status-track"><div class="status-fill"></div></div>` : ""}
-      ${job.status === "done" ? `<a class="job-download" href="/jobs/${job.id}/download">Скачать видео →</a>` : ""}
+      ${job.status === "done" ? `
+        <div class="job-actions">
+          <a class="job-download" href="/jobs/${job.id}/download">Скачать видео →</a>
+          <button class="ghost-btn copy-link-btn" data-url="${publicUrl}">Скопировать ссылку</button>
+        </div>
+      ` : ""}
       ${job.error ? `<div class="job-error">${escapeHtml(job.error.slice(0, 400))}</div>` : ""}
     `;
     container.appendChild(card);
   }
+
+  container.querySelectorAll(".copy-link-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(btn.dataset.url);
+      const original = btn.textContent;
+      btn.textContent = "Скопировано ✓";
+      setTimeout(() => (btn.textContent = original), 1500);
+    });
+  });
+}
+
+function statCard(value, label, tone = "") {
+  return `<div class="stat-card"><div class="stat-value ${tone}">${value}</div><div class="stat-label">${label}</div></div>`;
+}
+
+function renderTimeline(container, timeline) {
+  container.innerHTML = "";
+  const max = Math.max(1, ...timeline.map((d) => d.count));
+  for (const point of timeline) {
+    const bar = document.createElement("div");
+    bar.className = "chart-bar";
+    bar.style.height = `${Math.max(4, (point.count / max) * 100)}%`;
+    bar.title = `${point.date}: ${point.count}`;
+    container.appendChild(bar);
+  }
+}
+
+async function loadMyAnalytics() {
+  const res = await fetch("/analytics/me", { headers: authHeaders() });
+  if (!res.ok) return;
+  const a = await res.json();
+
+  $("my-stats").innerHTML = [
+    statCard(a.total, "всего роликов"),
+    statCard(a.done, "готово", "success"),
+    statCard(a.in_progress, "в процессе", "ember"),
+    statCard(a.error, "с ошибкой", "danger"),
+    statCard(a.avg_duration_sec ? `${Math.round(a.avg_duration_sec)}с` : "—", "средняя генерация"),
+  ].join("");
+
+  renderTimeline($("my-timeline"), a.timeline);
+}
+
+async function loadAdminAnalytics() {
+  const res = await fetch("/analytics/overview", { headers: authHeaders() });
+  if (!res.ok) return;
+  const a = await res.json();
+
+  $("admin-stats").innerHTML = [
+    statCard(a.total_users, "пользователей"),
+    statCard(a.active_subscriptions, "активных подписок", "success"),
+    statCard(a.total_jobs, "всего роликов"),
+    statCard(a.done, "готово", "success"),
+    statCard(a.error, "с ошибкой", "danger"),
+    statCard(a.avg_duration_sec ? `${Math.round(a.avg_duration_sec)}с` : "—", "средняя генерация"),
+  ].join("");
+
+  renderTimeline($("admin-timeline"), a.timeline);
 }
 
 function escapeHtml(str) {
@@ -252,11 +318,19 @@ async function boot() {
   $("create-job-btn").disabled = !state.me.has_active_subscription;
 
   $("admin-panel").classList.toggle("hidden", !state.me.is_admin);
-  if (state.me.is_admin) loadAdminPanel();
+  if (state.me.is_admin) {
+    loadAdminPanel();
+    loadAdminAnalytics();
+  }
 
   loadJobs();
+  loadMyAnalytics();
   clearInterval(state.pollTimer);
-  state.pollTimer = setInterval(loadJobs, 4000);
+  state.pollTimer = setInterval(() => {
+    loadJobs();
+    loadMyAnalytics();
+    if (state.me.is_admin) loadAdminAnalytics();
+  }, 4000);
 }
 
 initOAuthButtons();

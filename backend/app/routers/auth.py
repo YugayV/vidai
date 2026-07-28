@@ -35,7 +35,7 @@ def _create_user(db: Session, email: str, provider: str, hashed_password: str | 
 
 @router.post("/register", response_model=schemas.TokenOut)
 def register(data: schemas.RegisterIn, db: Session = Depends(get_db)):
-    if data.invite_code != settings.INVITE_CODE:
+    if settings.INVITE_CODE and data.invite_code != settings.INVITE_CODE:
         raise HTTPException(status_code=403, detail="Неверный инвайт-код")
 
     existing = db.query(models.User).filter(models.User.email == data.email).first()
@@ -72,7 +72,7 @@ def google_login(data: schemas.GoogleAuthIn, db: Session = Depends(get_db)):
 
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
-        if data.invite_code != settings.INVITE_CODE:
+        if settings.INVITE_CODE and data.invite_code != settings.INVITE_CODE:
             raise HTTPException(403, "Неверный инвайт-код")
         user = _create_user(db, email, "google", hashed_password=None)
 
@@ -100,7 +100,7 @@ def telegram_login(data: schemas.TelegramAuthIn, db: Session = Depends(get_db)):
     pseudo_email = f"tg_{data.id}@telegram.local"
     user = db.query(models.User).filter(models.User.email == pseudo_email).first()
     if not user:
-        if data.invite_code != settings.INVITE_CODE:
+        if settings.INVITE_CODE and data.invite_code != settings.INVITE_CODE:
             raise HTTPException(403, "Неверный инвайт-код")
         user = _create_user(db, pseudo_email, "telegram", hashed_password=None)
 

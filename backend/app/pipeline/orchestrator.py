@@ -1,6 +1,7 @@
 import json
 import os
 import traceback
+import datetime as dt
 
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,8 @@ from . import script_gen, image_gen, video_gen, voice_gen, assemble
 def _set_status(db: Session, job: models.Job, status: str, error: str | None = None):
     job.status = status
     job.error = error
+    if status in ("done", "error"):
+        job.finished_at = dt.datetime.utcnow()
     db.commit()
 
 
@@ -19,6 +22,9 @@ def run_pipeline(job_id: str, db: Session):
     job = db.query(models.Job).filter(models.Job.id == job_id).first()
     if not job:
         return
+
+    job.started_at = dt.datetime.utcnow()
+    db.commit()
 
     job_dir = os.path.join(settings.STORAGE_DIR, "jobs", job.id)
     os.makedirs(job_dir, exist_ok=True)

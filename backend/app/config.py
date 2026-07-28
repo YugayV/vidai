@@ -16,7 +16,9 @@ class Settings(BaseSettings):
     STORAGE_DIR: str = "./storage"
 
     # --- Приглашение для регистрации знакомых (простая защита от чужих) ---
-    INVITE_CODE: str = "change-me-invite"
+    # Если оставить пустым — регистрация открыта без кода (удобно, пока
+    # раздаёшь программу вручную). Впиши код сюда, когда решишь закрыть вход.
+    INVITE_CODE: str = ""
 
     # --- Google OAuth (кнопка "Войти через Google") ---
     # Google Cloud Console -> APIs & Services -> Credentials -> OAuth client ID

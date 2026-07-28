@@ -51,6 +51,10 @@ class Job(Base):
 
     script_json = Column(Text, nullable=True)     # сценарий по сценам (json)
     final_video_path = Column(String, nullable=True)
+    share_token = Column(String, default=gen_id)   # для публичной ссылки на скачивание
+
+    started_at = Column(DateTime, nullable=True)   # когда реально начали генерировать
+    finished_at = Column(DateTime, nullable=True)  # когда закончили (done или error)
 
     created_at = Column(DateTime, default=dt.datetime.utcnow)
     updated_at = Column(DateTime, default=dt.datetime.utcnow, onupdate=dt.datetime.utcnow)

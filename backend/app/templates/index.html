@@ -32,16 +32,16 @@
       </div>
 
       <form id="login-form" class="tab-panel active">
-        <input type="email" id="login-email" placeholder="Email" required />
+        <input type="text" id="login-email" placeholder="Email или логин" required />
         <input type="password" id="login-password" placeholder="Пароль" required />
         <button type="submit" class="primary-btn">Войти</button>
         <p class="error" id="login-error"></p>
       </form>
 
       <form id="register-form" class="tab-panel">
-        <input type="email" id="reg-email" placeholder="Email" required />
+        <input type="text" id="reg-email" placeholder="Email или логин" required />
         <input type="password" id="reg-password" placeholder="Пароль" required />
-        <input type="text" id="reg-invite" placeholder="Инвайт-код" required />
+        <input type="text" id="reg-invite" placeholder="Инвайт-код (если есть)" />
         <button type="submit" class="primary-btn">Создать аккаунт</button>
         <p class="error" id="reg-error"></p>
       </form>
@@ -72,6 +72,12 @@
       <button id="create-job-btn" class="primary-btn">Сгенерировать</button>
     </section>
 
+    <section class="analytics-panel">
+      <h2>Аналитика</h2>
+      <div id="my-stats" class="stat-grid"></div>
+      <div id="my-timeline" class="chart-row"></div>
+    </section>
+
     <section class="jobs-list">
       <h2>Мои ролики</h2>
       <div id="jobs-container"></div>
@@ -79,6 +85,9 @@
 
     <section id="admin-panel" class="admin-panel hidden">
       <h2>Админка</h2>
+      <div id="admin-stats" class="stat-grid"></div>
+      <div id="admin-timeline" class="chart-row"></div>
+      <h3 class="admin-subhead">Пользователи</h3>
       <div id="admin-users-container"></div>
     </section>
 
